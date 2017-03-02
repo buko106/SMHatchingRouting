@@ -1,6 +1,8 @@
 #include<cstdint>
 #include<cstdio>
+#include<cstring>
 #include<vector>
+#include<algorithm>
 using namespace std;
 typedef vector<uint32_t> seed;
 
@@ -99,26 +101,162 @@ int dist(seed from,seed to){
   return ret;
 }
 
+vector<bool> routing( seed from , seed to , condition cond ){
+  int d = dist(from,to);
+  vector<int> used(d),trace(d+1),step(d+1,1000000);
+  step[0]=0;
+  seed state = from;
+  pair<int,seed> temp;
+  for( int i = 0 ; i < d ; ++i ){
+    temp =  countNum(state,cond);
+    used[i] = temp.first;
+    nextState(state);
+  }
+
+  for( int i = 0 ; i < d ; ++i ){
+    // Take
+    int next = i + used[i];
+    if( next <= d && step[next] > step[i] + 1 ){ // do not execede target
+      step[next] = step[i] + 1;
+      trace[next] = i;
+    } 
+
+    // Reject
+    if( step[i+1] > step[i] + 1 ){
+      step[i+1] = step[i] + 1;
+      trace[i+1] = i;
+    }
+  }
+
+  // for( int i = 0 ; i <= d ; ++i ){
+  //   printf("i = %03d, trace = %d, step = %d\n", i , trace[i], step[i]);
+  // }
+  // trace back
+  vector<bool> ret;
+  int pos = d;
+  while( pos != 0 ){
+    if( trace[pos] == pos-1 ){
+      ret.push_back(false);
+    }else{
+      ret.push_back(true);
+    }
+    pos = trace[pos];
+  }
+
+  reverse(ret.begin(),ret.end());
+  return ret;
+}
+
 int main(){
   seed init(4),target(4);
-  printf("input Initial seed as 01234567,8ABCDEF,FEDCBA8,76543210\n");
+  condition cond = { true , true , true , true , true };
+  char buf[1000];
+  printf("input Initial seed as \"01234567,8ABCDEF,FEDCBA8,76543210\"\n");
   if( EOF == scanf("%x,%x,%x,%x",&init[3],&init[2],&init[1],&init[0]) ){
     printf("Bad input\n");
     return 1;
   }
 
-  printf("input Target seed as 01234567,8ABCDEF,FEDCBA8,76543210\n");
+  printf("input Target seed as \"01234567,8ABCDEF,FEDCBA8,76543210\"\n");
   if( EOF == scanf("%x,%x,%x,%x",&target[3],&target[2],&target[1],&target[0]) ){
     printf("Bad input\n");
     return 1;
   }
     
   printf("dist = %d\n",dist(init,target));
+  // Sex
+  printf("Sex(y/n)\n");
+  if( EOF == scanf("%s",buf) ){
+    printf("Bad input\n");
+    return 1;
+  }
+  if( 0 == strcmp(buf,"y") ){
+    cond.Sex = true;
+  }else if( 0 == strcmp(buf,"n") ){
+    cond.Sex = false;    
+  }else{
+    printf("Bad input\n");
+    return 1;
+  }
+
+  // Destiny Knot
+  printf("Destiny Knot(y/n)\n");
+  if( EOF == scanf("%s",buf) ){
+    printf("Bad input\n");
+    return 1;
+  }
+  if( 0 == strcmp(buf,"y") ){
+    cond.DestinyKnot = true;
+  }else if( 0 == strcmp(buf,"n") ){
+    cond.DestinyKnot = false;    
+  }else{
+    printf("Bad input\n");
+    return 1;
+  }
+
+  //  Ball
+  printf("Ball(y/n)\n");
+  if( EOF == scanf("%s",buf) ){
+    printf("Bad input\n");
+    return 1;
+  }
+  if( 0 == strcmp(buf,"y") ){
+    cond.Ball = true;
+  }else if( 0 == strcmp(buf,"n") ){
+    cond.Ball = false;    
+  }else{
+    printf("Bad input\n");
+    return 1;
+  }
+  // International  
+  printf("International(y/n)\n");
+  if( EOF == scanf("%s",buf) ){
+    printf("Bad input\n");
+    return 1;
+  }
+  if( 0 == strcmp(buf,"y") ){
+    cond.Internatioal = true;
+  }else if( 0 == strcmp(buf,"n") ){
+    cond.Internatioal = false;    
+  }else{
+    printf("Bad input\n");
+    return 1;
+  }
+
+  // Shiny Charm
+  printf("Shiny Charm(y/n)\n");
+  if( EOF == scanf("%s",buf) ){
+    printf("Bad input\n");
+    return 1;
+  }
+  if( 0 == strcmp(buf,"y") ){
+    cond.ShinyCharm = true;
+  }else if( 0 == strcmp(buf,"n") ){
+    cond.ShinyCharm = false;    
+  }else{
+    printf("Bad input\n");
+    return 1;
+  }
+  
+
+
+  
+  vector<bool> route = routing(init,target,cond);
   seed state = init;
-  condition cond = { true , true , true , true , true };
-  pair<int,seed> result = countNum(state,cond);
-  state = result.second;
-  printf("%08x,%08x,%08x,%08x",state[3],state[2],state[1],state[0]);
-  printf(" (%d)\n",result.first);
+  for( size_t i = 0 ; i < route.size() ; ++i ){
+    printf("%08x,%08x,%08x,%08x ",state[3],state[2],state[1],state[0]);
+    if( route[i] ){
+      pair<int,seed> next = countNum(state,cond);
+      state = next.second;
+      printf("Take(%02d)\n",next.first);
+    }else{
+      printf("Reject\n");
+      nextState(state);
+    }
+  }
+  // pair<int,seed> result = countNum(state,cond);
+  // state = result.second;
+  // printf("%08x,%08x,%08x,%08x",state[3],state[2],state[1],state[0]);
+  // printf(" (%d)\n",result.first);
   return 0;
 }
