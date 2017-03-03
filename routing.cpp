@@ -151,12 +151,23 @@ int main(){
   seed init(4),target(4);
   condition cond = { true , true , true , true , true };
   char buf[1000];
+  int offset;
   printf("input Initial seed as \"01234567,8ABCDEF,FEDCBA8,76543210\"\n");
   if( EOF == scanf("%x,%x,%x,%x",&init[3],&init[2],&init[1],&init[0]) ){
     printf("Bad input\n");
     return 1;
   }
 
+  printf("input offset from Initial seed (non-negative integer)\n");
+  if( EOF == scanf("%d",&offset) || offset < 0){
+    printf("Bad input\n");
+    return 1;
+  }
+
+  for( int i = 0 ; i < offset ; ++i ){
+    nextState(init);
+  }
+  
   printf("input Target seed as \"01234567,8ABCDEF,FEDCBA8,76543210\"\n");
   if( EOF == scanf("%x,%x,%x,%x",&target[3],&target[2],&target[1],&target[0]) ){
     printf("Bad input\n");
@@ -239,20 +250,24 @@ int main(){
   }
   
 
-
+  getchar(); // eliminate LF in the stdin buffer
   
   vector<bool> route = routing(init,target,cond);
   seed state = init;
+  printf("%d steps\n",(int)route.size());
+  int egg = 0;
   for( size_t i = 0 ; i < route.size() ; ++i ){
     printf("%08x,%08x,%08x,%08x ",state[3],state[2],state[1],state[0]);
     if( route[i] ){
       pair<int,seed> next = countNum(state,cond);
       state = next.second;
-      printf("Take(%02d)\n",next.first);
+      ++egg;
+      printf("Take(%02d) %d\n",next.first,egg);
     }else{
       printf("Reject\n");
       nextState(state);
     }
+    if( i != route.size() - 1 ) getchar();
   }
   // pair<int,seed> result = countNum(state,cond);
   // state = result.second;
